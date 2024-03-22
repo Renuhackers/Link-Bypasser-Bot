@@ -109,10 +109,11 @@ def loopthread(message,otherss=False):
 
 # start command
 # start command
+@app.# start command
 @app.on_message(filters.command(["start"]))
 async def send_start(client, message):
     chat_id = message.chat.id
-    channel_username = "RenusHackingArmy"  # Replace with your channel username
+    channel_username = "@RenusHackingArmy"  # Your channel username
     
     # Check if user is in the channel
     try:
@@ -132,6 +133,10 @@ async def send_start(client, message):
                 ]),
                 reply_to_message_id=message.message_id
             )
+    except ChatAdminRequired:
+        print("The bot needs to be an admin of the channel to check user status.")
+    except Exception as e:
+        print("Error:", e)
 
 # help command
 @app.on_message(filters.command(["help"]))
