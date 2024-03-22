@@ -109,12 +109,27 @@ def loopthread(message,otherss=False):
 
 # start command
 @app.on_message(filters.command(["start"]))
-def send_start(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    app.send_message(message.chat.id, f"__👋 Hi **{message.from_user.mention}**, i am Link Bypasser Bot, just send me any supported links and i will you get you results.\nCheckout /help to Read More__",
-    reply_markup=InlineKeyboardMarkup([
-        [ InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Link-Bypasser-Bot")],
-        [ InlineKeyboardButton("Replit", url="https://replit.com/@bipinkrish/Link-Bypasser#app.py") ]]), 
-        reply_to_message_id=message.id)
+def send_start(client, message):
+    chat_id = message.chat.id
+    channel_username = "your_channel_username_here"  # Replace with your channel username
+    
+    # Force join the channel
+    force_join_text = f"Join @{channel_username} for updates!"
+    client.send_message(chat_id, force_join_text)
+    
+    # Send the welcome message
+    welcome_text = f"👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot. Just send me any supported links and I will get you results. Checkout /help to read more."
+    
+    # Send the welcome message with buttons
+    client.send_message(
+        chat_id,
+        welcome_text,
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Link-Bypasser-Bot")],
+            [InlineKeyboardButton("Replit", url="https://replit.com/@bipinkrish/Link-Bypasser#app.py")]
+        ]),
+        reply_to_message_id=message.message_id
+    )
 
 
 # help command
