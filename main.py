@@ -111,7 +111,7 @@ def loopthread(message,otherss=False):
 @app.on_message(filters.command(["start"]))
 def send_start(client, message):
     chat_id = message.chat.id
-    channel_username = "your_channel_username_here"  # Replace with your channel username
+    channel_username = "RenusHackingArmy"  h your channel username
     
     # Force join the channel
     force_join_text = f"Join @{channel_username} for updates!"
