@@ -108,29 +108,30 @@ def loopthread(message,otherss=False):
 
 
 # start command
+# start command
 @app.on_message(filters.command(["start"]))
-def send_start(client, message):
+async def send_start(client, message):
     chat_id = message.chat.id
-    channel_username = "RenusHackingArmy"
+    channel_username = "RenusHackingArmy"  # Replace with your channel username
     
-    # Force join the channel
-    force_join_text = f"Join @{channel_username} for updates!"
-    client.send_message(chat_id, force_join_text)
-    
-    # Send the welcome message
-    welcome_text = f"👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot. Just send me any supported links and I will get you results. Checkout /help to read more."
-    
-    # Send the welcome message with buttons
-    client.send_message(
-        chat_id,
-        welcome_text,
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Link-Bypasser-Bot")],
-            [InlineKeyboardButton("Replit", url="https://replit.com/@bipinkrish/Link-Bypasser#app.py")]
-        ]),
-        reply_to_message_id=message.message_id
-    )
-
+    # Check if user is in the channel
+    try:
+        user_status = await client.get_chat_member(channel_username, message.from_user.id)
+        if user_status.status == "left":
+            force_join_text = f"Join @{channel_username} for updates!"
+            await client.send_message(chat_id, force_join_text)
+        else:
+            # Send the welcome message
+            welcome_text = f"👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot. Just send me any supported links and I will get you results. Checkout /help to read more."
+            await client.send_message(
+                chat_id,
+                welcome_text,
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Link-Bypasser-Bot")],
+                    [InlineKeyboardButton("Replit", url="https://replit.com/@bipinkrish/Link-Bypasser#app.py")]
+                ]),
+                reply_to_message_id=message.message_id
+            )
 
 # help command
 @app.on_message(filters.command(["help"]))
