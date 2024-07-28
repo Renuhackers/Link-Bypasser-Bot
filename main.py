@@ -8,7 +8,7 @@ from pyrogram.types import (
 from pyrogram.errors import UserNotParticipant
 from os import remove
 from threading import Thread
-from json import load
+from json import load, dump
 from re import search
 
 from texts import HELP_TEXT
@@ -22,18 +22,38 @@ channel_2 = "@RenusBotsChannel"
 join_photo_url = "https://t.me/MediaXStore/9"  # URL of the photo to be sent
 admin_chat_id = 2068329336  # Replace with your admin chat ID
 
-# bot
+# Bot configurations
 bot_token = "6447129150:AAG8XSHZeqKOkdFusBTuJhl93AecMsDey00"
 api_hash = "0ca4154111e7b0f99e9929710faa3f25"
 api_id = "25105744"
 app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
-with app:
-    app.set_bot_commands(
-        [
-            BotCommand("start", "Welcome Message"),
-            BotCommand("help", "List of All Supported Sites"),
-        ]
-    )
+
+# Load or create users.json
+try:
+    with open("users.json", "r") as f:
+        users = load(f)
+except FileNotFoundError:
+    users = {}
+
+# Function to save users
+def save_users():
+    with open("users.json", "w") as f:
+        dump(users, f)
+
+# Function to handle new users
+def handle_new_user(user):
+    if str(user.id) not in users:
+        users[str(user.id)] = {
+            "name": user.first_name,
+            "username": user.username,
+            "chat_id": user.id
+        }
+        save_users()
+        # Send notification to admin
+        app.send_message(
+            admin_chat_id,
+            f"New user started the bot:\n\nName: {user.first_name}\nUsername: {user.username}\nChat ID: {user.id}"
+        )
 
 # Function to check if a user is a member of a channel
 def is_member(client, user_id, channel):
@@ -43,16 +63,12 @@ def is_member(client, user_id, channel):
     except UserNotParticipant:
         return False
 
-# Function to log new users
-def log_new_user(user_id, username):
-    with open("new_users.txt", "a") as f:
-        f.write(f"{user_id},{username}\n")
-
-# Function to notify admin of a new user
-def notify_admin(client, user):
-    client.send_message(
-        admin_chat_id,
-        f"New user started the bot:\n\nName: {user.mention}\nUsername: @{user.username}\nChat ID: {user.id}",
+with app:
+    app.set_bot_commands(
+        [
+            BotCommand("start", "Welcome Message"),
+            BotCommand("help", "List of All Supported Sites"),
+        ]
     )
 
 # handle index
@@ -133,7 +149,7 @@ def loopthread(message: Message, otherss=False):
                     pass
             else:
                 app.send_message(
-                    message.chat.id, "__Failed to Jump", reply_to_message_id=message.id
+                    message.chat.id, "__Failed to Jump__", reply_to_message_id=message.id
                 )
         else:
             try:
@@ -154,7 +170,7 @@ def loopthread(message: Message, otherss=False):
                 message.chat.id,
                 message.photo.file_id,
                 f"__{links}__",
-                reply_to_message_id=message.id
+                reply_to_message_id=message.id,
             )
             app.delete_messages(message.chat.id, [msg.id])
             return
@@ -183,7 +199,7 @@ def loopthread(message: Message, otherss=False):
     except Exception as e:
         app.send_message(
             message.chat.id,
-            f"__Failed to Bypass : {e}__",
+            f"__Failed to Bypass: {e}__",
             reply_to_message_id=message.id,
         )
 
@@ -195,23 +211,22 @@ def send_start(
 ):
     user_id = message.from_user.id
 
-    # Log new user and notify admin
-    log_new_user(user_id, message.from_user.username)
-    notify_admin(client, message.from_user)
+    # Handle new user
+    handle_new_user(message.from_user)
 
     # Check if the user is a member of the required channels
     if not (is_member(client, user_id, channel_1) and is_member(client, user_id, channel_2)):
         client.send_photo(
             message.chat.id,
             join_photo_url,
-            caption="*⚠️ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ!⚠️\n\n✘ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ\n\n✘ ɪғ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴜsᴇ ᴍᴇ\n\n✘ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ʙᴜᴛᴛᴏɴ\n\n✘ ᴛʜᴇɴ ᴄʟɪᴄᴋ /start*",
+            caption="*⚠️ ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ! ⚠️\n\n✘ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs.\n\n✘ ɪғ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴜsᴇ ᴍᴇ,\n\n✘ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ʙᴜᴛᴛᴏɴs,\n\n✘ ᴛʜᴇɴ ᴄʟɪᴄᴋ /start*",
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
-                        InlineKeyboardButton("Join Channel 1", url=f"https://t.me/{channel_1}")
+                        InlineKeyboardButton("Join Channel 1", url=f"https://t.me/{channel_1[1:]}")
                     ],
                     [
-                        InlineKeyboardButton("Join Channel 2", url=f"https://t.me/{channel_2}")
+                        InlineKeyboardButton("Join Channel 2", url=f"https://t.me/{channel_2[1:]}")
                     ]
                 ]
             ),
@@ -234,6 +249,7 @@ def send_start(
             ]
         ),
         reply_to_message_id=message.id,
+   
     )
 
 # help command
@@ -293,5 +309,3 @@ def docfile(
 # server loop
 print("Bot Starting")
 app.run()
-
-   
