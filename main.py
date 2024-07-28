@@ -5,27 +5,52 @@ from pyrogram.types import (
     BotCommand,
     Message,
 )
-from pyrogram.errors import UserNotParticipant
 from os import remove
 from threading import Thread
-from json import load
+from json import load, dump
 from re import search
+from time import time
 
 from texts import HELP_TEXT
 import bypasser
 import freewall
-from time import time
 
-# Define your channels here
-channel_1 = "your_channel_1_username"
-channel_2 = "your_channel_2_username"
-join_photo_url = "https://example.com/your_image.jpg"  # URL of the photo to be sent
-
-# bot
+# Bot configurations
 bot_token = "6447129150:AAG8XSHZeqKOkdFusBTuJhl93AecMsDey00"
 api_hash = "0ca4154111e7b0f99e9929710faa3f25"
 api_id = "25105744"
 app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+
+# Admin chat ID
+admin_chat_id = 2068329336  # Replace with your admin chat ID
+
+# Load or create users.json
+try:
+    with open("users.json", "r") as f:
+        users = load(f)
+except FileNotFoundError:
+    users = {}
+
+# Function to save users
+def save_users():
+    with open("users.json", "w") as f:
+        dump(users, f)
+
+# Function to handle new users
+def handle_new_user(user):
+    if str(user.id) not in users:
+        users[str(user.id)] = {
+            "name": user.first_name,
+            "username": user.username,
+            "chat_id": user.id
+        }
+        save_users()
+        # Send notification to admin
+        app.send_message(
+            admin_chat_id,
+            f"New user started the bot:\n\nName: {user.first_name}\nUsername: {user.username}\nChat ID: {user.id}"
+        )
+
 with app:
     app.set_bot_commands(
         [
@@ -33,14 +58,6 @@ with app:
             BotCommand("help", "List of All Supported Sites"),
         ]
     )
-
-# Function to check if a user is a member of a channel
-def is_member(client, user_id, channel):
-    try:
-        client.get_chat_member(channel, user_id)
-        return True
-    except UserNotParticipant:
-        return False
 
 # handle index
 def handleIndex(ele: str, message: Message, msg: Message):
@@ -59,6 +76,7 @@ def handleIndex(ele: str, message: Message, msg: Message):
 
 # loop thread
 def loopthread(message: Message, otherss=False):
+
     urls = []
     if otherss:
         texts = message.caption
@@ -180,39 +198,23 @@ def send_start(
     client: Client,
     message: Message,
 ):
-    user_id = message.from_user.id
-
-    # Check if the user is a member of the required channels
-    if not (is_member(client, user_id, channel_1) and is_member(client, user_id, channel_2)):
-        client.send_photo(
-            message.chat.id,
-            join_photo_url,
-            caption="Please join the following channels to use the bot:",
-            reply_markup=InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton("Join Channel 1", url=f"https://t.me/{channel_1}")
-                    ],
-                    [
-                        InlineKeyboardButton("Join Channel 2", url=f"https://t.me/{channel_2}")
-                    ]
-                ]
-            ),
-            reply_to_message_id=message.id
-        )
-        return
-
-    # If the user is a member of both channels, send the welcome message
-    client.send_message(
+    handle_new_user(message.from_user)
+    app.send_message(
         message.chat.id,
-        f"👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot. Just send me any supported links, and I will get you the results.\nCheckout /help to Read More.",
+        f"__👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot, just send me any supported links and I will get you results.\nCheckout /help to Read More__",
         reply_markup=InlineKeyboardMarkup(
             [
                 [
-                    InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Link-Bypasser-Bot")
+                    InlineKeyboardButton(
+                        "🌐 Source Code",
+                        url="https://github.com/bipinkrish/Link-Bypasser-Bot",
+                    )
                 ],
                 [
-                    InlineKeyboardButton("Replit", url="https://replit.com/@bipinkrish/Link-Bypasser#app.py")
+                    InlineKeyboardButton(
+                        "Replit",
+                        url="https://replit.com/@bipinkrish/Link-Bypasser#app.py",
+                    )
                 ],
             ]
         ),
