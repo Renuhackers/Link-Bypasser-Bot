@@ -5,6 +5,7 @@ from pyrogram.types import (
     BotCommand,
     Message,
 )
+from pyrogram.errors import UserNotParticipant
 from os import remove
 from threading import Thread
 from json import load
@@ -15,13 +16,16 @@ import bypasser
 import freewall
 from time import time
 
-# Directly set the bot token, API ID, and API hash
+# Define your channels here
+channel_1 = "your_channel_1_username"
+channel_2 = "your_channel_2_username"
+join_photo_url = "https://example.com/your_image.jpg"  # URL of the photo to be sent
+
+# bot
 bot_token = "6447129150:AAG8XSHZeqKOkdFusBTuJhl93AecMsDey00"
 api_hash = "0ca4154111e7b0f99e9929710faa3f25"
 api_id = "25105744"
-
 app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
-
 with app:
     app.set_bot_commands(
         [
@@ -30,15 +34,13 @@ with app:
         ]
     )
 
-# Load configuration from file
-try:
-    with open("config.json", "r") as f:
-        DATA: dict = load(f)
-except FileNotFoundError:
-    DATA = {}
-
-def getenv(var):
-    return environ.get(var) or DATA.get(var, None)
+# Function to check if a user is a member of a channel
+def is_member(client, user_id, channel):
+    try:
+        client.get_chat_member(channel, user_id)
+        return True
+    except UserNotParticipant:
+        return False
 
 # handle index
 def handleIndex(ele: str, message: Message, msg: Message):
@@ -178,22 +180,39 @@ def send_start(
     client: Client,
     message: Message,
 ):
-    app.send_message(
+    user_id = message.from_user.id
+
+    # Check if the user is a member of the required channels
+    if not (is_member(client, user_id, channel_1) and is_member(client, user_id, channel_2)):
+        client.send_photo(
+            message.chat.id,
+            join_photo_url,
+            caption="Please join the following channels to use the bot:",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton("Join Channel 1", url=f"https://t.me/{channel_1}")
+                    ],
+                    [
+                        InlineKeyboardButton("Join Channel 2", url=f"https://t.me/{channel_2}")
+                    ]
+                ]
+            ),
+            reply_to_message_id=message.id
+        )
+        return
+
+    # If the user is a member of both channels, send the welcome message
+    client.send_message(
         message.chat.id,
-        f"__👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot, just send me any supported links and I will get you results.\nCheckout /help to Read More__",
+        f"👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot. Just send me any supported links, and I will get you the results.\nCheckout /help to Read More.",
         reply_markup=InlineKeyboardMarkup(
             [
                 [
-                    InlineKeyboardButton(
-                        "🌐 Source Code",
-                        url="https://github.com/bipinkrish/Link-Bypasser-Bot",
-                    )
+                    InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Link-Bypasser-Bot")
                 ],
                 [
-                    InlineKeyboardButton(
-                        "Replit",
-                        url="https://replit.com/@bipinkrish/Link-Bypasser#app.py",
-                    )
+                    InlineKeyboardButton("Replit", url="https://replit.com/@bipinkrish/Link-Bypasser#app.py")
                 ],
             ]
         ),
