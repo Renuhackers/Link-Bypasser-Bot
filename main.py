@@ -5,7 +5,7 @@ from pyrogram.types import (
     BotCommand,
     Message,
 )
-from os import environ, remove
+from os import remove
 from threading import Thread
 from json import load
 from re import search
@@ -16,20 +16,13 @@ import freewall
 from time import time
 from db import DB
 
-
-# bot
-with open("config.json", "r") as f:
-    DATA: dict = load(f)
-
-
-def getenv(var):
-    return environ.get(var) or DATA.get(var, None)
-
-
+# Directly set the bot token, API ID, and API hash
 bot_token = "6447129150:AAG8XSHZeqKOkdFusBTuJhl93AecMsDey00"
 api_hash = "0ca4154111e7b0f99e9929710faa3f25"
 api_id = "25105744"
+
 app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+
 with app:
     app.set_bot_commands(
         [
@@ -38,15 +31,25 @@ with app:
         ]
     )
 
+# Load configuration from file
+try:
+    with open("config.json", "r") as f:
+        DATA: dict = load(f)
+except FileNotFoundError:
+    DATA = {}
+
+def getenv(var):
+    return environ.get(var) or DATA.get(var, None)
+
 # DB
 db_api = getenv("DB_API")
 db_owner = getenv("DB_OWNER")
 db_name = getenv("DB_NAME")
-try: database = DB(api_key=db_api, db_owner=db_owner, db_name=db_name)
-except: 
-    print("Database is Not Set")
+try:
+    database = DB(api_key=db_api, db_owner=db_owner, db_name=db_name)
+except Exception as e:
+    print(f"Database is Not Set: {e}")
     database = None
-
 
 # handle index
 def handleIndex(ele: str, message: Message, msg: Message):
@@ -55,7 +58,8 @@ def handleIndex(ele: str, message: Message, msg: Message):
         app.delete_messages(message.chat.id, msg.id)
     except:
         pass
-    if database and result: database.insert(ele, result)
+    if database and result:
+        database.insert(ele, result)
     for page in result:
         app.send_message(
             message.chat.id,
@@ -64,10 +68,8 @@ def handleIndex(ele: str, message: Message, msg: Message):
             disable_web_page_preview=True,
         )
 
-
 # loop thread
 def loopthread(message: Message, otherss=False):
-
     urls = []
     if otherss:
         texts = message.caption
@@ -107,8 +109,10 @@ def loopthread(message: Message, otherss=False):
     temp = None
 
     for ele in urls:
-        if database: df_find = database.find(ele)
-        else: df_find = None
+        if database:
+            df_find = database.find(ele)
+        else:
+            df_find = None
         if df_find:
             print("Found in DB")
             temp = df_find
@@ -191,7 +195,6 @@ def loopthread(message: Message, otherss=False):
             reply_to_message_id=message.id,
         )
 
-
 # start command
 @app.on_message(filters.command(["start"]))
 def send_start(
@@ -200,7 +203,7 @@ def send_start(
 ):
     app.send_message(
         message.chat.id,
-        f"__👋 Hi **{message.from_user.mention}**, i am Link Bypasser Bot, just send me any supported links and i will you get you results.\nCheckout /help to Read More__",
+        f"__👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot, just send me any supported links and I will get you results.\nCheckout /help to Read More__",
         reply_markup=InlineKeyboardMarkup(
             [
                 [
@@ -220,7 +223,6 @@ def send_start(
         reply_to_message_id=message.id,
     )
 
-
 # help command
 @app.on_message(filters.command(["help"]))
 def send_help(
@@ -234,7 +236,6 @@ def send_help(
         disable_web_page_preview=True,
     )
 
-
 # links
 @app.on_message(filters.text)
 def receive(
@@ -243,7 +244,6 @@ def receive(
 ):
     bypass = Thread(target=lambda: loopthread(message), daemon=True)
     bypass.start()
-
 
 # doc thread
 def docthread(message: Message):
@@ -259,14 +259,12 @@ def docthread(message: Message):
     )
     remove(file)
 
-
 # files
 @app.on_message([filters.document, filters.photo, filters.video])
 def docfile(
     client: Client,
     message: Message,
 ):
-
     try:
         if message.document.file_name.endswith("dlc"):
             bypass = Thread(target=lambda: docthread(message), daemon=True)
@@ -277,7 +275,6 @@ def docfile(
 
     bypass = Thread(target=lambda: loopthread(message, True), daemon=True)
     bypass.start()
-
 
 # server loop
 print("Bot Starting")
