@@ -5,58 +5,54 @@ from pyrogram.types import (
     BotCommand,
     Message,
 )
+from pyrogram.errors import UserNotParticipant
 from os import remove
 from threading import Thread
-from json import load, dump
+from json import load
 from re import search
-from time import time
 
 from texts import HELP_TEXT
 import bypasser
 import freewall
+from time import time
 
-# Bot configurations
+# Define your channels and admin chat ID here
+channel_1 = "@RenusHackingArmy"
+channel_2 = "@RenusBotsChannel"
+join_photo_url = "https://t.me/MediaXStore/9"  # URL of the photo to be sent
+admin_chat_id = 2068329336  # Replace with your admin chat ID
+
+# bot
 bot_token = "6447129150:AAG8XSHZeqKOkdFusBTuJhl93AecMsDey00"
 api_hash = "0ca4154111e7b0f99e9929710faa3f25"
 api_id = "25105744"
 app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
-
-# Admin chat ID
-admin_chat_id = 2068329336  # Replace with your admin chat ID
-
-# Load or create users.json
-try:
-    with open("users.json", "r") as f:
-        users = load(f)
-except FileNotFoundError:
-    users = {}
-
-# Function to save users
-def save_users():
-    with open("users.json", "w") as f:
-        dump(users, f)
-
-# Function to handle new users
-def handle_new_user(user):
-    if str(user.id) not in users:
-        users[str(user.id)] = {
-            "name": user.first_name,
-            "username": user.username,
-            "chat_id": user.id
-        }
-        save_users()
-        # Send notification to admin
-        app.send_message(
-            admin_chat_id,
-            f"New user started the bot:\n\nName: {user.first_name}\nUsername: {user.username}\nChat ID: {user.id}"
-        )
-
 with app:
     app.set_bot_commands(
         [
             BotCommand("start", "Welcome Message"),
             BotCommand("help", "List of All Supported Sites"),
         ]
+    )
+
+# Function to check if a user is a member of a channel
+def is_member(client, user_id, channel):
+    try:
+        client.get_chat_member(channel, user_id)
+        return True
+    except UserNotParticipant:
+        return False
+
+# Function to log new users
+def log_new_user(user_id, username):
+    with open("new_users.txt", "a") as f:
+        f.write(f"{user_id},{username}\n")
+
+# Function to notify admin of a new user
+def notify_admin(client, user):
+    client.send_message(
+        admin_chat_id,
+        f"New user started the bot:\n\nName: {user.mention}\nUsername: @{user.username}\nChat ID: {user.id}",
     )
 
 # handle index
@@ -76,7 +72,6 @@ def handleIndex(ele: str, message: Message, msg: Message):
 
 # loop thread
 def loopthread(message: Message, otherss=False):
-
     urls = []
     if otherss:
         texts = message.caption
@@ -159,7 +154,7 @@ def loopthread(message: Message, otherss=False):
                 message.chat.id,
                 message.photo.file_id,
                 f"__{links}__",
-                reply_to_message_id=message.id,
+                reply_to_message_id=message.id
             )
             app.delete_messages(message.chat.id, [msg.id])
             return
@@ -198,23 +193,43 @@ def send_start(
     client: Client,
     message: Message,
 ):
-    handle_new_user(message.from_user)
-    app.send_message(
+    user_id = message.from_user.id
+
+    # Log new user and notify admin
+    log_new_user(user_id, message.from_user.username)
+    notify_admin(client, message.from_user)
+
+    # Check if the user is a member of the required channels
+    if not (is_member(client, user_id, channel_1) and is_member(client, user_id, channel_2)):
+        client.send_photo(
+            message.chat.id,
+            join_photo_url,
+            caption="*⚠️ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ!⚠️\n\n✘ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ\n\n✘ ɪғ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴜsᴇ ᴍᴇ\n\n✘ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ʙᴜᴛᴛᴏɴ\n\n✘ ᴛʜᴇɴ ᴄʟɪᴄᴋ /start*",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton("Join Channel 1", url=f"https://t.me/{channel_1}")
+                    ],
+                    [
+                        InlineKeyboardButton("Join Channel 2", url=f"https://t.me/{channel_2}")
+                    ]
+                ]
+            ),
+            reply_to_message_id=message.id
+        )
+        return
+
+    # If the user is a member of both channels, send the welcome message
+    client.send_message(
         message.chat.id,
-        f"__👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot, just send me any supported links and I will get you results.\nCheckout /help to Read More__",
+        f"👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot. Just send me any supported links, and I will get you the results.\nCheckout /help to Read More.",
         reply_markup=InlineKeyboardMarkup(
             [
                 [
-                    InlineKeyboardButton(
-                        "🌐 Source Code",
-                        url="https://github.com/bipinkrish/Link-Bypasser-Bot",
-                    )
+                    InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Link-Bypasser-Bot")
                 ],
                 [
-                    InlineKeyboardButton(
-                        "Replit",
-                        url="https://replit.com/@bipinkrish/Link-Bypasser#app.py",
-                    )
+                    InlineKeyboardButton("Replit", url="https://replit.com/@bipinkrish/Link-Bypasser#app.py")
                 ],
             ]
         ),
@@ -278,3 +293,5 @@ def docfile(
 # server loop
 print("Bot Starting")
 app.run()
+
+   
