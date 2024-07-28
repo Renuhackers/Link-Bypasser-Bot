@@ -14,7 +14,7 @@ from texts import HELP_TEXT
 import bypasser
 import freewall
 from time import time
-from db import DB
+from db import DB  # Ensure db.py is in the same directory
 
 # Directly set the bot token, API ID, and API hash
 bot_token = "6447129150:AAG8XSHZeqKOkdFusBTuJhl93AecMsDey00"
@@ -265,6 +265,7 @@ def docfile(
     client: Client,
     message: Message,
 ):
+
     try:
         if message.document.file_name.endswith("dlc"):
             bypass = Thread(target=lambda: docthread(message), daemon=True)
@@ -272,8 +273,7 @@ def docfile(
             return
     except:
         pass
-
-    bypass = Thread(target=lambda: loopthread(message, True), daemon=True)
+        bypass = Thread(target=lambda: loopthread(message, True), daemon=True)
     bypass.start()
 
 # server loop
