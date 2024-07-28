@@ -17,8 +17,8 @@ import freewall
 from time import time
 
 # Define your channels and admin chat ID here
-channel_1 = "@RenusHackingArmy"
-channel_2 = "@RenusBotsChannel"
+channel_1 = "RenusHackingArmy"
+channel_2 = "RenusBotsChannel"
 join_photo_url = "https://t.me/MediaXStore/9"  # URL of the photo to be sent
 admin_chat_id = 2068329336  # Replace with your admin chat ID
 
