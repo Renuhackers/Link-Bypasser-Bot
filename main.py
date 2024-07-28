@@ -14,7 +14,6 @@ from texts import HELP_TEXT
 import bypasser
 import freewall
 from time import time
-from db import DB  # Ensure db.py is in the same directory
 
 # Directly set the bot token, API ID, and API hash
 bot_token = "6447129150:AAG8XSHZeqKOkdFusBTuJhl93AecMsDey00"
@@ -41,16 +40,6 @@ except FileNotFoundError:
 def getenv(var):
     return environ.get(var) or DATA.get(var, None)
 
-# DB
-db_api = getenv("DB_API")
-db_owner = getenv("DB_OWNER")
-db_name = getenv("DB_NAME")
-try:
-    database = DB(api_key=db_api, db_owner=db_owner, db_name=db_name)
-except Exception as e:
-    print(f"Database is Not Set: {e}")
-    database = None
-
 # handle index
 def handleIndex(ele: str, message: Message, msg: Message):
     result = bypasser.scrapeIndex(ele)
@@ -58,8 +47,6 @@ def handleIndex(ele: str, message: Message, msg: Message):
         app.delete_messages(message.chat.id, msg.id)
     except:
         pass
-    if database and result:
-        database.insert(ele, result)
     for page in result:
         app.send_message(
             message.chat.id,
@@ -109,14 +96,7 @@ def loopthread(message: Message, otherss=False):
     temp = None
 
     for ele in urls:
-        if database:
-            df_find = database.find(ele)
-        else:
-            df_find = None
-        if df_find:
-            print("Found in DB")
-            temp = df_find
-        elif search(r"https?:\/\/(?:[\w.-]+)?\.\w+\/\d+:", ele):
+        if search(r"https?:\/\/(?:[\w.-]+)?\.\w+\/\d+:", ele):
             handleIndex(ele, message, msg)
             return
         elif bypasser.ispresent(bypasser.ddl.ddllist, ele):
@@ -148,9 +128,6 @@ def loopthread(message: Message, otherss=False):
 
         print("bypassed:", temp)
         if temp != None:
-            if (not df_find) and ("http://" in temp or "https://" in temp) and database:
-                print("Adding to DB")
-                database.insert(ele, temp)
             links = links + temp + "\n"
 
     end = time()
@@ -273,7 +250,8 @@ def docfile(
             return
     except:
         pass
-        bypass = Thread(target=lambda: loopthread(message, True), daemon=True)
+
+    bypass = Thread(target=lambda: loopthread(message, True), daemon=True)
     bypass.start()
 
 # server loop
