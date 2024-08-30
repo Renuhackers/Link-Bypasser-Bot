@@ -23,7 +23,7 @@ join_photo_url = "https://t.me/MediaXStore/9"  # URL of the photo to be sent
 admin_chat_id = 2068329336  # Replace with your admin chat ID
 
 # Bot configurations
-bot_token = "6447129150:AAG8XSHZeqKOkdFusBTuJhl93AecMsDey00"
+bot_token = "6447129150:AAGGvCH-Wrj2B43CErR1hXBq9NkvnGXd5Xk"
 api_hash = "0ca4154111e7b0f99e9929710faa3f25"
 api_id = "25105744"
 app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
