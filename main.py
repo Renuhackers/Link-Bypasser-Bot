@@ -71,6 +71,113 @@ with app:
         ]
     )
 
+# start command
+@app.on_message(filters.command(["start"]))
+def send_start(
+    client: Client,
+    message: Message,
+):
+    user_id = message.from_user.id
+    user_name = message.from_user.first_name
+
+    # Handle new user
+    handle_new_user(message.from_user)
+
+    # Check if user is a member of the required channels
+    if not (is_member(client, user_id, channel_1) and is_member(client, user_id, channel_2)):
+        client.send_photo(
+            chat_id=user_id,
+            photo=join_photo_url,
+            caption="*⚠️ ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ! ⚠️\n\n✘ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs.\n\n✘ ɪғ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴜsᴇ ᴍᴇ,\n\n✘ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ʙᴜᴛᴛᴏɴs,\n\n✘ ᴛʜᴇɴ ᴄʟɪᴄᴋ /start*",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [InlineKeyboardButton("Join Channel 1", url=f"https://t.me/{channel_1}")],
+                    [InlineKeyboardButton("Join Channel 2", url=f"https://t.me/{channel_2}")],
+                ]
+            ),
+            parse_mode="markdown"
+        )
+        return
+
+    # Send welcome message if the user is verified
+    welcome_text = f"» ʜᴇʟʟᴏ {user_name}!\n\n" \
+                   "» ɪ ᴀᴍ ᴀ ᴘᴏᴡᴇʀꜰᴜʟ ʙʏᴘᴀss + ᴀᴘᴘʀᴏᴠᴇʀ + ɢʀᴏᴜᴘ ᴍᴀɴᴀɢᴇʀ ʙᴏᴛ\n\n" \
+                   "» ɪ ᴄᴀɴ ʙʏᴘᴀss ᴠᴀʀɪᴏᴜs sʜᴏʀᴛᴇɴᴇʀ ʟɪɴᴋs, ᴅʀɪᴠᴇ ʟɪɴᴋs, sᴄʀᴀᴘᴇ ʟɪɴᴋs ᴀɴᴅ ᴀᴘᴘʀᴏᴠᴇ ᴜꜱᴇʀꜱ ɪɴ ɢʀᴏᴜᴘꜱ/ᴄʜᴀɴɴᴇʟꜱ.\n\n" \
+                   "» ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴡɪᴛʜ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ & ᴇɴᴊᴏʏ\n\n" \
+                   "» ᴍᴀɪɴᴛᴀɪɴᴇᴅ ʙʏ : ʀᴇɴᴜs ʜᴀᴄᴋᴇʀ 🦋"
+
+    client.send_photo(
+        chat_id=user_id,
+        photo="https://t.me/MediaXStore/10",  # Replace with your welcome image URL
+        caption=welcome_text,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("✘ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs ✘", url="https://t.me/YOUR_BOT_USERNAME?startgroup=true")],
+                [InlineKeyboardButton("✘ ᴜᴘᴅᴀᴛᴇs ✘", url=f"https://t.me/{channel_1}"),
+                 InlineKeyboardButton("✘ sᴜᴘᴘᴏʀᴛ ✘", url=f"https://t.me/{channel_2}")],
+                [InlineKeyboardButton("⧈ ʀᴇǫᴜᴇsᴛ ᴀ ᴡᴇʙsɪᴛᴇ ᴛᴏ ʙʏᴘᴀss ⧈", url="https://t.me/YOUR_SUPPORT_GROUP")],
+                [InlineKeyboardButton("↻ ʜᴇʟᴘ ↻", callback_data="help"),
+                 InlineKeyboardButton("↻ ᴀʙᴏᴜᴛ ↻", callback_data="about")],
+            ]
+        ),
+        parse_mode="markdown"
+    )
+
+# help command
+@app.on_message(filters.command(["help"]))
+def send_help(
+    client: Client,
+    message: Message,
+):
+    app.send_message(
+        message.chat.id,
+        HELP_TEXT,
+        reply_to_message_id=message.id,
+        disable_web_page_preview=True,
+    )
+
+# links
+@app.on_message(filters.text)
+def receive(
+    client: Client,
+    message: Message,
+):
+    bypass = Thread(target=lambda: loopthread(message), daemon=True)
+    bypass.start()
+
+# doc thread
+def docthread(message: Message):
+    msg: Message = app.send_message(
+        message.chat.id, "🔎 __bypassing...__", reply_to_message_id=message.id
+    )
+    print("sent DLC file")
+    file = app.download_media(message)
+    dlccont = open(file, "r").read()
+    links = bypasser.getlinks(dlccont)
+    app.edit_message_text(
+        message.chat.id, msg.id, f"__{links}__", disable_web_page_preview=True
+    )
+    remove(file)
+
+# files
+@app.on_message([filters.document, filters.photo, filters.video])
+def docfile(
+    client: Client,
+    message: Message,
+):
+
+    try:
+        if message.document.file_name.endswith("dlc"):
+           
+            bypass = Thread(target=lambda: docthread(message), daemon=True)
+            bypass.start()
+            return
+    except:
+        pass
+
+    bypass = Thread(target=lambda: loopthread(message, True), daemon=True)
+    bypass.start()
+
 # handle index
 def handleIndex(ele: str, message: Message, msg: Message):
     result = bypasser.scrapeIndex(ele)
@@ -158,7 +265,7 @@ def loopthread(message: Message, otherss=False):
                 temp = "**Error**: " + str(e)
 
         print("bypassed:", temp)
-        if temp != None:
+        if temp is not None:
             links = links + temp + "\n"
 
     end = time()
@@ -202,155 +309,6 @@ def loopthread(message: Message, otherss=False):
             f"__Failed to Bypass: {e}__",
             reply_to_message_id=message.id,
         )
-
-# start command
-@app.on_message(filters.command(["start"]))
-def start(client, message):
-    user_id = message.from_user.id
-    user_name = message.from_user.first_name
-
-    # Check if user is a member of the required channels
-    if not (is_member(client, user_id, channel_1) and is_member(client, user_id, channel_2)):
-        client.send_photo(
-            chat_id=user_id,
-            photo="https://example.com/verification_image.jpg",  # Replace with your image URL
-            caption="Please join the following channels to use this bot:\n\n"
-                    f"1. [Channel 1](https://t.me/{channel_1})\n"
-                    f"2. [Channel 2](https://t.me/{channel_2})",
-            reply_markup=InlineKeyboardMarkup(
-                [
-                    [InlineKeyboardButton("Join Channel 1", url=f"https://t.me/{channel_1}")],
-                    [InlineKeyboardButton("Join Channel 2", url=f"https://t.me/{channel_2}")],
-                ]
-            ),
-            parse_mode="markdown"
-        )
-        return
-
-    # Send welcome message if the user is verified
-    welcome_text = f"» ʜᴇʟʟᴏ {user_name}!\n\n" \
-                   "» ɪ ᴀᴍ ᴀ ᴘᴏᴡᴇʀꜰᴜʟ ʙʏᴘᴀss + ᴀᴘᴘʀᴏᴠᴇʀ + ɢʀᴏᴜᴘ ᴍᴀɴᴀɢᴇʀ ʙᴏᴛ\n\n" \
-                   "» ɪ ᴄᴀɴ ʙʏᴘᴀss ᴠᴀʀɪᴏᴜs sʜᴏʀᴛᴇɴᴇʀ ʟɪɴᴋs, ᴅʀɪᴠᴇ ʟɪɴᴋs, sᴄʀᴀᴘᴇ ʟɪɴᴋs ᴀɴᴅ ᴀᴘᴘʀᴏᴠᴇ ᴜꜱᴇʀꜱ ɪɴ ɢʀᴏᴜᴘꜱ/ᴄʜᴀɴɴᴇʟꜱ.\n\n" \
-                   "» ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴡɪᴛʜ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ & ᴇɴᴊᴏʏ\n\n" \
-                   "» ᴍᴀɪɴᴛᴀɪɴᴇᴅ ʙʏ : ʀᴇɴᴜs ʜᴀᴄᴋᴇʀ 🦋"
-
-    client.send_photo(
-        chat_id=user_id,
-        photo="https://example.com/welcome_image.jpg",  # Replace with your image URL
-        caption=welcome_text,
-        reply_markup=InlineKeyboardMarkup(
-            [
-                [InlineKeyboardButton("✘ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs ✘", url="https://t.me/YOUR_BOT_USERNAME?startgroup=true")],
-                [InlineKeyboardButton("✘ ᴜᴘᴅᴀᴛᴇs ✘", url=f"https://t.me/{channel_1}"),
-                 InlineKeyboardButton("✘ sᴜᴘᴘᴏʀᴛ ✘", url=f"https://t.me/{channel_2}")],
-                [InlineKeyboardButton("⧈ ʀᴇǫᴜᴇsᴛ ᴀ ᴡᴇʙsɪᴛᴇ ᴛᴏ ʙʏᴘᴀss ⧈", url="https://t.me/YOUR_SUPPORT_GROUP")],
-                [InlineKeyboardButton("↻ ʜᴇʟᴘ ↻", callback_data="help"),
-                 InlineKeyboardButton("↻ ᴀʙᴏᴜᴛ ↻", callback_data="about")],
-            ]
-        ),
-        parse_mode="markdown"
-    )
-    handle_new_user(user_id, user_name)
-
-# help command
-@app.on_message(filters.command(["help"]))
-def send_help(
-    client: Client,
-    message: Mess@app.on_message(filters.command(["start"]))
-def send_start(
-    client: Client,
-    message: Message,
-):
-    user_id = message.from_user.id
-
-    # Handle new user
-    handle_new_user(message.from_user)
-
-    # Check if the user is a member of the required channels
-    if not (is_member(client, user_id, channel_1) and is_member(client, user_id, channel_2)):
-        client.send_photo(
-            message.chat.id,
-            join_photo_url,
-            caption="*⚠️ ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ! ⚠️\n\n✘ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs.\n\n✘ ɪғ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴜsᴇ ᴍᴇ,\n\n✘ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ʙᴜᴛᴛᴏɴs,\n\n✘ ᴛʜᴇɴ ᴄʟɪᴄᴋ /start*",
-            reply_markup=InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton("Join Channel 1", url=f"https://t.me/{channel_1[1:]}")
-                    ],
-                    [
-                        InlineKeyboardButton("Join Channel 2", url=f"https://t.me/{channel_2[1:]}")
-                    ]
-                ]
-            ),
-            reply_to_message_id=message.id
-        )
-        return
-
-    # If the user is a member of both channels, send the welcome message
-    client.send_message(
-        message.chat.id,
-        f"👋 Hi **{message.from_user.mention}**, I am Link Bypasser Bot. Just send me any supported links, and I will get you the results.\nCheckout /help to Read More.",
-        reply_markup=InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Link-Bypasser-Bot")
-                ],
-                [
-                    InlineKeyboardButton("Replit", url="https://replit.com/@bipinkrish/Link-Bypasser#app.py")
-                ],
-            ]
-        ),
-        reply_to_message_id=message.id,
-   
-    )age,
-):
-    app.send_message(
-        message.chat.id,
-        HELP_TEXT,
-        reply_to_message_id=message.id,
-        disable_web_page_preview=True,
-    )
-
-# links
-@app.on_message(filters.text)
-def receive(
-    client: Client,
-    message: Message,
-):
-    bypass = Thread(target=lambda: loopthread(message), daemon=True)
-    bypass.start()
-
-# doc thread
-def docthread(message: Message):
-    msg: Message = app.send_message(
-        message.chat.id, "🔎 __bypassing...__", reply_to_message_id=message.id
-    )
-    print("sent DLC file")
-    file = app.download_media(message)
-    dlccont = open(file, "r").read()
-    links = bypasser.getlinks(dlccont)
-    app.edit_message_text(
-        message.chat.id, msg.id, f"__{links}__", disable_web_page_preview=True
-    )
-    remove(file)
-
-# files
-@app.on_message([filters.document, filters.photo, filters.video])
-def docfile(
-    client: Client,
-    message: Message,
-):
-
-    try:
-        if message.document.file_name.endswith("dlc"):
-            bypass = Thread(target=lambda: docthread(message), daemon=True)
-            bypass.start()
-            return
-    except:
-        pass
-
-    bypass = Thread(target=lambda: loopthread(message, True), daemon=True)
-    bypass.start()
 
 # server loop
 print("Bot Starting")
