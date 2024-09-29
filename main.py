@@ -205,6 +205,58 @@ def loopthread(message: Message, otherss=False):
 
 # start command
 @app.on_message(filters.command(["start"]))
+def start(client, message):
+    user_id = message.from_user.id
+    user_name = message.from_user.first_name
+
+    # Check if user is a member of the required channels
+    if not (is_member(client, user_id, channel_1) and is_member(client, user_id, channel_2)):
+        client.send_photo(
+            chat_id=user_id,
+            photo="https://example.com/verification_image.jpg",  # Replace with your image URL
+            caption="Please join the following channels to use this bot:\n\n"
+                    f"1. [Channel 1](https://t.me/{channel_1})\n"
+                    f"2. [Channel 2](https://t.me/{channel_2})",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [InlineKeyboardButton("Join Channel 1", url=f"https://t.me/{channel_1}")],
+                    [InlineKeyboardButton("Join Channel 2", url=f"https://t.me/{channel_2}")],
+                ]
+            ),
+            parse_mode="markdown"
+        )
+        return
+
+    # Send welcome message if the user is verified
+    welcome_text = f"» ʜᴇʟʟᴏ {user_name}!\n\n" \
+                   "» ɪ ᴀᴍ ᴀ ᴘᴏᴡᴇʀꜰᴜʟ ʙʏᴘᴀss + ᴀᴘᴘʀᴏᴠᴇʀ + ɢʀᴏᴜᴘ ᴍᴀɴᴀɢᴇʀ ʙᴏᴛ\n\n" \
+                   "» ɪ ᴄᴀɴ ʙʏᴘᴀss ᴠᴀʀɪᴏᴜs sʜᴏʀᴛᴇɴᴇʀ ʟɪɴᴋs, ᴅʀɪᴠᴇ ʟɪɴᴋs, sᴄʀᴀᴘᴇ ʟɪɴᴋs ᴀɴᴅ ᴀᴘᴘʀᴏᴠᴇ ᴜꜱᴇʀꜱ ɪɴ ɢʀᴏᴜᴘꜱ/ᴄʜᴀɴɴᴇʟꜱ.\n\n" \
+                   "» ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴡɪᴛʜ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ & ᴇɴᴊᴏʏ\n\n" \
+                   "» ᴍᴀɪɴᴛᴀɪɴᴇᴅ ʙʏ : ʀᴇɴᴜs ʜᴀᴄᴋᴇʀ 🦋"
+
+    client.send_photo(
+        chat_id=user_id,
+        photo="https://example.com/welcome_image.jpg",  # Replace with your image URL
+        caption=welcome_text,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("✘ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘs ✘", url="https://t.me/YOUR_BOT_USERNAME?startgroup=true")],
+                [InlineKeyboardButton("✘ ᴜᴘᴅᴀᴛᴇs ✘", url=f"https://t.me/{channel_1}"),
+                 InlineKeyboardButton("✘ sᴜᴘᴘᴏʀᴛ ✘", url=f"https://t.me/{channel_2}")],
+                [InlineKeyboardButton("⧈ ʀᴇǫᴜᴇsᴛ ᴀ ᴡᴇʙsɪᴛᴇ ᴛᴏ ʙʏᴘᴀss ⧈", url="https://t.me/YOUR_SUPPORT_GROUP")],
+                [InlineKeyboardButton("↻ ʜᴇʟᴘ ↻", callback_data="help"),
+                 InlineKeyboardButton("↻ ᴀʙᴏᴜᴛ ↻", callback_data="about")],
+            ]
+        ),
+        parse_mode="markdown"
+    )
+    handle_new_user(user_id, user_name)
+
+# help command
+@app.on_message(filters.command(["help"]))
+def send_help(
+    client: Client,
+    message: Mess@app.on_message(filters.command(["start"]))
 def send_start(
     client: Client,
     message: Message,
@@ -250,13 +302,7 @@ def send_start(
         ),
         reply_to_message_id=message.id,
    
-    )
-
-# help command
-@app.on_message(filters.command(["help"]))
-def send_help(
-    client: Client,
-    message: Message,
+    )age,
 ):
     app.send_message(
         message.chat.id,
